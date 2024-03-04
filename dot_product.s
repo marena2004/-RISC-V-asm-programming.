@@ -1,46 +1,41 @@
 .data
-a: .word 1, 2, 3, 4, 5
-b: .word 6, 7, 8, 9, 10
-newline: .string "The dot product is: "
+array1: .word 1, 2, 3, 4, 5
+array2: .word 6, 7, 8, 9, 10
+newline_msg: .string "The dot product is: "
 
 .text
 main:
-    li x7, 5 # 5
-    addi x5, x0, 0 # i = 0
-    addi x6, x0, 0 # sop = 0
-    la x8, a # loading the address of a --> x8 (32 bits register)
-    la x9, b # loading the address of a --> x9 (32 bits register)
+    li t0, 5          # t0 = 5 (loop counter)
+    addi t1, zero, 0  # t1 = i = 0 (loop index)
+    addi t2, zero, 0  # t2 = sum_of_products = 0
+    la t3, array1     # Load the address of array1 into t3
+    la t4, array2     # Load the address of array2 into t4
 
 loop:
-    bge x5, x7, exit # i >= 5 --> exit
-    # i
-    slli x18, x5, 2 # set x18 to i*4
-    
-    add x19, x18, x8 # add i*4 to the base address of a and put it to x19
-    lw x22, 0(x19)
-    
-    add x20, x18, x9 # add i*4 to the base address of b and put it to x20
-    lw x23, 0(x20)
-    
-    mul x21, x22, x23  # a[i] * b[i]
-    add x6, x6, x21  # sop += a[i] * b[i]
-    
-    addi x5, x5, 1 # i++
+    bge t1, t0, exit  # If i >= 5, exit the loop
+    # Load array elements
+    slli t5, t1, 2    # t5 = i*4 (byte offset)
+    add t6, t5, t3    # t6 = &array1[i]
+    lw t7, 0(t6)      # t7 = array1[i]
+    add t8, t5, t4    # t8 = &array2[i]
+    lw t9, 0(t8)      # t9 = array2[i]
+    # Calculate dot product
+    mul t10, t7, t9   # t10 = array1[i] * array2[i]
+    add t2, t2, t10   # sum_of_products += array1[i] * array2[i]
+    addi t1, t1, 1    # Increment i
     j loop
-    
+
 exit:
-    # print a newline character; use print_string
-    addi a0, x0, 4
-    la a1, newline
-    ecall
-    
-    # print_int; sop
-    addi a0, x0, 1
-    add a1, x0, x6
-    ecall
-    
-    # exit cleanly
-    addi a0, x0, 10
+    # Print newline
+    addi a0, zero, 4       # Print string system call
+    la a1, newline_msg     # Load address of newline_msg
     ecall
 
-    
+    # Print sum_of_products
+    addi a0, zero, 1  # Print integer system call
+    add a1, zero, t2  # Load sum_of_products into a1
+    ecall
+
+    # Exit cleanly
+    addi a0, zero, 10  # Exit system call
+    ecall
