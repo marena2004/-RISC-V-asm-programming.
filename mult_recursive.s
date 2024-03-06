@@ -1,39 +1,48 @@
 .text
 main:
-    addi t0, x0, 110    # t0 = a
-    addi t1, x0, 50     # t1 = b
-    jal mult_recursive  # Call mult_recursive
+    # pass the first argument to a0
+    # pass the second argument to a1
+    addi a0, x0, 110
+    addi a1, x0, 50
+    jal mult
+    
+    # print_int
+    mv a1, a0 # by convention the return value is always in a0
+    addi a0, x0, 1
+    ecall
 
-    mv a1, a0           # Move result to a1 for printing
-    addi a0, x0, 1      # Print integer system call
+    # exit cleanly
+    addi a0, x0, 10
     ecall
     
-    addi a0, x0, 10     # Exit cleanly
-    ecall
-
+mult:
+    # base case
+    # compare a1 with 1, if the two are equal you exit the mult function
+    addi t0, x0, 1
+    beq a1, t0, exit_base_case
     
-mult_recursive:
-    addi t2, x0, 1      # Base case: check if b is 1
-    beq t1, t2, exit_base_case
+    # recursive case
+    addi sp, sp, -4
+    sw ra, 0(sp) # storing the ra value on to the stack
     
-    addi sp, sp, -4     # Save return address
-    sw ra, 0(sp)        # Store ra on the stack
+    # mult(a, b-1);
     
-    addi sp, sp, -4     # Save a0
+    addi sp, sp, -4
     sw a0, 0(sp)
+    addi a1, a1, -1
+    jal mult
     
-    addi t1, t1, -1     # Decrease b for the recursive call
-    jal mult_recursive
+    # a + mult(a, b-1)
+    # mv t1, a0
     
-    lw t3, 0(sp)        # Restore a0
+    # restore the original a value before the call to mult
+    lw t1, 0(sp)
     addi sp, sp, 4
+    add a0, a0, t1
     
-    add t0, t0, t3      # Calculate a + mult(a, b-1)
+    lw ra, 0(sp)
+    addi sp, sp, 4
+    jr ra
     
-    lw ra, 0(sp)        # Restore ra
-    addi sp, sp, 4      # Restore stack pointer
-    jr ra               # Return
-
 exit_base_case:
-    mv a0, t0           # Return a (the result)
-    jr ra               # Return
+    jr ra
